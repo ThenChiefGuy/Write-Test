@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tippgeschwindigkeitstest</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .word-list {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .word {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        #typing-area {
+            width: 100%;
+            height: 50px;
+            font-size: 1.2em;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        #timer {
+            font-size: 1.2em;
+        }
+        .results {
+            display: none;
+            margin-top: 20px;
+        }
+        .results span {
+            display: block;
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Tippgeschwindigkeitstest</h1>
+        <div class="word-list" id="word-list">
+            <!-- Die Wörter werden hier angezeigt -->
+        </div>
+        <input type="text" id="typing-area" placeholder="Tippe hier..." autofocus onkeyup="checkWord(event)">
+        <div id="timer">1:00</div>
+        
+        <div class="results" id="results">
+            <span id="wpm"></span>
+            <span id="keystrokes"></span>
+            <span id="accuracy"></span>
+            <span id="correct-words"></span>
+            <span id="incorrect-words"></span>
+        </div>
+    </div>
+
+    <script>
+        const allWords = [
+            "nichts", "ihr", "eben", "mit", "zwar", "alle", "wer", "in", "es", "auch", "sehr", "auf", "über", "während", 
+            "diesen", "über", "einem", "allein", "anders", "wird", "vielleicht", "im", "gewesen", "hat", "kann", "ihrem", 
+            "auf", "einmal", "mir", "gemacht", "ersten", "sehen", "wieder", "weil", "können", "ohne", "des", "denn", "an", 
+            "seinem", "werde", "hatten", "machen", "dazu", "sich", "jetzt", "noch", "vor", "seit", "erst", "nach", "ihrer", 
+            "Zeit", "müssen", "also", "dabei", "dass", "durch", "nur", "ganz", "ihr", "viele", "war", "neue", "genau", 
+            "gut", "bis", "immer", "schon", "mehr", "uns", "einfach", "braucht", "heute", "morgen", "wird", "muss", "gesehen", 
+            "zum", "nochmal", "sein", "soll", "darf", "kommen", "hier", "da", "endlich", "jetzt", "geht", "dann", "gibt", 
+            "ohne", "jedes", "groß", "klein", "nicht", "früher", "obwohl", "sofort", "aber", "doch", "mit", "könnte", "werden", 
+            "vielleicht", "später", "weiter", "lang", "kurz", "anders", "gleich", "bald", "heißt", "möchte", "denn", "gerne", 
+            "diesmal", "versuchen", "auf", "nie", "ihren", "sollten", "noch", "so", "eben", "denke", "liebe", "weiß", "sagt", 
+            "gut", "oft", "zuletzt", "ein", "mehr", "weiß", "besser", "nimmt", "mögen", "jedoch", "konnte", "viel", "sehen", 
+            "geben", "sehen", "hat", "irgendwann", "keiner", "keine", "ihnen", "machen", "zeigt", "beste", "davon", "nicht", 
+            "fand", "finden", "nahm", "habe", "bleiben", "lange", "mitten", "jetzt"
+        ];
+
+        let currentWordIndex = 0;
+        let correctWords = 0;
+        let incorrectWords = 0;
+        let keystrokes = 0;
+        let totalKeystrokes = 0;
+        let shuffledWords = shuffleArray([...allWords]); // Mische die Wörter zufällig
+        let startTime;
+        let timerInterval;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function displayWords() {
+            const wordListDiv = document.getElementById('word-list');
+            wordListDiv.innerHTML = '';
+            shuffledWords.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.classList.add('word');
+                if (index === currentWordIndex) {
+                    span.style.textDecoration = "underline";
+                }
+                wordListDiv.appendChild(span);
+            });
+        }
+
+        function checkWord(event) {
+            const typingArea = document.getElementById('typing-area');
+            const typedWord = typingArea.value.trim();
+            const currentWord = shuffledWords[currentWordIndex];
+
+            // Tastenanschläge zählen
+            totalKeystrokes += event.key.length === 1 ? 1 : 0;
+
+            if (event.key === ' ') {
+                const wordSpans = document.getElementsByClassName('word');
+                if (typedWord === currentWord) {
+                    wordSpans[currentWordIndex].classList.add('correct');
+                    correctWords++;
+                } else {
+                    wordSpans[currentWordIndex].classList.add('incorrect');
+                    incorrectWords++;
+                }
+
+                currentWordIndex++;
+                if (currentWordIndex >= shuffledWords.length) {
+                    shuffledWords = shuffleArray([...allWords]); // Wiederhole die Wörter in zufälliger Reihenfolge
+                    currentWordIndex = 0;
+                }
+
+                displayWords();
+                typingArea.value = ''; // Leert das Eingabefeld
+            }
+        }
+
+        function startTimer(duration) {
+            let time = duration, minutes, seconds;
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                let diff = duration - (((Date.now() - startTime) / 1000) | 0);
+                minutes = (diff / 60) | 0;
+                seconds = (diff % 60) | 0;
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById('timer').textContent = minutes + ":" + seconds;
+
+                if (diff <= 0) {
+                    clearInterval(timerInterval);
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function endTest() {
+            document.getElementById('typing-area').disabled = true;
+            document.getElementById('timer').textContent = "Zeit abgelaufen!";
+            calculateResults();
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function calculateResults() {
+            const wpm = Math.round(correctWords);
+            const accuracy = Math.round((correctWords / (correctWords + incorrectWords)) * 100);
+            const keystrokesDisplay = `${totalKeystrokes} (Richtig: ${correctWords * 5}, Falsch: ${incorrectWords * 5})`;
+
+            document.getElementById('wpm').textContent = `${wpm} WPM (Wörter pro Minute)`;
+            document.getElementById('keystrokes').textContent = `Tastenanschläge: ${keystrokesDisplay}`;
+            document.getElementById('accuracy').textContent = `Genauigkeit: ${accuracy}%`;
+            document.getElementById('correct-words').textContent = `Korrekte Wörter: ${correctWords}`;
+            document.getElementById('incorrect-words').textContent = `Falsche Wörter: ${incorrectWords}`;
+        }
+
+        // Initialisiere den Test
+        displayWords();
+        startTimer(60);
+    </script>
+</body>
+</html>
